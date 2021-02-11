@@ -34,7 +34,7 @@ vec2 GetRotated(vec2 vec)
 }
 
 
-uniform vec3 u_vColorPallete[4];
+uniform vec3 u_vColorPalette[4];
 
 const int paletteMaxIndex = 2; // size - 1
 
@@ -49,7 +49,7 @@ void SetColor(const int n)
 
     int minVal = (i + 1 < paletteMaxIndex) ? i + 1 : paletteMaxIndex;
 
-    gl_FragColor = vec4( u_vColorPallete[i] + (u_vColorPallete[minVal] - u_vColorPallete[i]) * magic, 1.0f);
+    gl_FragColor = vec4( u_vColorPalette[i] + (u_vColorPalette[minVal] - u_vColorPalette[i]) * magic, 1.0f);
 }
 
 
