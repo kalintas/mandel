@@ -22,7 +22,7 @@ namespace mandel
     static gl::uniform s_juliaConstant = gl::s_getUniform<2, float>(glUniform2f); 
     static gl::uniform s_exponent      = gl::s_getUniform<1, float>(glUniform1f);
 
-    static gl::uniformArray s_colorPallete = gl::s_getUniformArray<9, float>(glUniform3fv);
+    static gl::uniformArray s_colorPalette = gl::s_getUniformArray<9, float>(glUniform3fv);
 
     static float s_angle;
 
@@ -49,7 +49,7 @@ namespace mandel
         s_increment.m_create    (shader, "u_vIncrement"    );
         s_maxIteration.m_create (shader, "u_maxIteration"  );
         s_rotation.m_create     (shader, "u_vRotationVec"  );
-        s_colorPallete.m_create (shader, "u_vColorPallete" );
+        s_colorPalette.m_create (shader, "u_vColorPalette" );
         s_juliaConstant.m_create(shader, "u_vJuliaConstant");
         s_bUseJuliaSet.m_create (shader, "u_bUseJuliaSet"  );
         s_exponent.m_create     (shader, "u_exponent"      );
@@ -84,7 +84,7 @@ namespace mandel
 
         s_angle = 0.0f;
 
-        s_colorPallete.setVec({ 1.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f });
+        s_colorPalette.setVec({ 1.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f });
 
         s_bUseJuliaSet.setVec(false); // false
         s_juliaConstant.setVec({ 0.0f, 0.0f });
@@ -132,7 +132,7 @@ namespace mandel
         float newExponent    = s_exponent.vec().x;
         bool bUseJuliaSet   = s_bUseJuliaSet.vec().x;
 
-        float* ptColorPallete =  const_cast<float*>(s_colorPallete.vec());
+        float* ptColorPallete =  const_cast<float*>(s_colorPalette.vec());
 
         if(ImGui::Button("*###ID0")) newAngle = 0.0f;
 
@@ -165,7 +165,7 @@ namespace mandel
         if(newAngle != s_angle) s_setRotationVec(newAngle);
 
         s_maxIteration.setVec(newMaxIteration);
-        s_colorPallete.m_update();
+        s_colorPalette.m_update();
         s_colorPeriod.setVec(newColorPeriod);
         s_exponent.setVec(newExponent);
 
