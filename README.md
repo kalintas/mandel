@@ -1,5 +1,5 @@
 # mandel
-simple mandelbrot generator (OpenGL)
+simple mandelbrot renderer (OpenGL)
 
 ![Screenshot_1](https://user-images.githubusercontent.com/73061876/107646853-81457980-6c8b-11eb-9c6e-af06b5a9b680.png)
 ![Screenshot_4](https://user-images.githubusercontent.com/73061876/107646856-8276a680-6c8b-11eb-8a72-50c6919cbb56.png)
