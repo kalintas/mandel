@@ -141,9 +141,9 @@ namespace mandel
 
         if(ImGui::Button("Reset Mandel")) ResetMandel(screenSize);
                 
-        ImGui::ColorEdit3("ColorPallete[0]", ptColorPallete    );
-        ImGui::ColorEdit3("ColorPallete[1]", ptColorPallete + 3);
-        ImGui::ColorEdit3("ColorPallete[2]", ptColorPallete + 6);
+        ImGui::ColorEdit3("ColorPalette[0]", ptColorPallete    );
+        ImGui::ColorEdit3("ColorPalette[1]", ptColorPallete + 3);
+        ImGui::ColorEdit3("ColorPalette[2]", ptColorPallete + 6);
 
         if(ImGui::Button("*###ID1")) newColorPeriod = 0.1f;
 
