@@ -10,7 +10,7 @@ namespace mandel::gl
     {
     public:
 
-        inline void m_create(const shader& _shader, const std::string_view& u_name)
+        void m_create(const shader& _shader, const std::string_view& u_name)
         {
             m_id = _shader.m_getUniformLocation(u_name);
 
@@ -18,7 +18,7 @@ namespace mandel::gl
             { std::cerr << "uniform::m_create cannot find the (" << u_name << ") uniform\n"; }
         }
 
-        virtual inline void m_update() const = 0;
+        virtual void m_update() const = 0;
 
     protected:
 
@@ -34,14 +34,12 @@ namespace mandel::gl
         uniform(const vec4<T>& v, const funcType& func) : m_func(func), m_vec(v) {}
         uniform(const funcType& func)                   : m_func(func)           {}
 
-        ~uniform() {}
+        [[nodiscard]] constexpr const vec4<T>& vec() const noexcept { return m_vec; }
 
-        inline const vec4<T>& vec() const { return m_vec; }
-
-	    inline void setVec(const vec4<T>& v) { m_vec = v; m_update();}
+	    void setVec(const vec4<T>& v) { m_vec = v; m_update();}
 
         // update gl uniforms
-        inline void m_update() const override
+        void m_update() const override
         {  
             static_assert(u_size < 4, "uniform::m_update uniform size cannot be larger than 4\n");
 
@@ -59,13 +57,13 @@ namespace mandel::gl
 
     // create a uniform object
     template<std::size_t u_size, typename T, typename funcType>
-    inline uniform<u_size, T, funcType> s_getUniform(const funcType& func)
+    [[nodiscard]] constexpr uniform<u_size, T, funcType> s_getUniform(const funcType& func)
     {
         return uniform<u_size, T, funcType>(func);
     }
 
     template<std::size_t u_size, typename T, typename funcType>
-    inline uniform<u_size, T, funcType> s_getUniform(const vec4<T>& v, const funcType& func)
+    [[nodiscard]] constexpr uniform<u_size, T, funcType> s_getUniform(const vec4<T>& v, const funcType& func)
     {
         return uniform<u_size, T, funcType>(v, func);
     }
@@ -80,14 +78,12 @@ namespace mandel::gl
         uniformArray(const bufferArray& v, const funcType& func) : m_func(func), m_buffer(v) {}
         uniformArray(const funcType& func)                       : m_func(func)           {}
 
-        ~uniformArray() {}
+        constexpr const bufferArray& vec() const { return m_buffer; }
 
-        inline const bufferArray& vec() const { return m_buffer; }
-
-	    inline void setVec(const bufferArray& v) 
+	    void setVec(const bufferArray& v) 
         { std::memcpy(m_buffer, v, sizeof(T) * count); m_update(); }
 
-        inline void m_update() const override
+        void m_update() const override
         {  
             GLCALL(m_func(m_id, count, m_buffer));
         }
@@ -101,13 +97,13 @@ namespace mandel::gl
 
     // create a uniformArray object
     template<std::size_t count, typename T, typename funcType>
-    inline uniformArray<count, T, funcType> s_getUniformArray(const funcType& func)
+    [[nodiscard]] constexpr uniformArray<count, T, funcType> s_getUniformArray(const funcType& func)
     {
         return uniformArray<count, T, funcType>(func);
     }
 
     template<std::size_t count, typename T, typename funcType>
-    inline uniformArray<count, T, funcType> s_getUniformArray
+    [[nodiscard]] constexpr uniformArray<count, T, funcType> s_getUniformArray
     (const typename uniformArray<count, T, funcType>::bufferArray& arr, const funcType& func)
     {
         return uniformArray<count, T, funcType>(arr, func);

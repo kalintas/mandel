@@ -2,8 +2,7 @@
 #
 # https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
 
-function(set_project_warnings project_name)
-  option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" TRUE)
+function(set_project_warnings project_name warningsAsErrors)
 
   set(MSVC_WARNINGS
       /W4 # Baseline reasonable warnings
@@ -49,7 +48,7 @@ function(set_project_warnings project_name)
       -Wformat=2 # warn on security issues around functions that format output (ie printf)
   )
 
-  if(WARNINGS_AS_ERRORS)
+  if(${warningsAsErrors})
     set(CLANG_WARNINGS ${CLANG_WARNINGS} -Werror)
     set(MSVC_WARNINGS ${MSVC_WARNINGS} /WX)
   endif()
@@ -61,9 +60,6 @@ function(set_project_warnings project_name)
       -Wduplicated-branches # warn if if / else branches have duplicated code
       -Wlogical-op # warn about logical operations being used where bitwise were probably wanted
       -Wuseless-cast # warn if you perform a cast to the same type
-
-      -pedantic-errors
-      -ansi
   )
 
   if(MSVC)
@@ -76,6 +72,6 @@ function(set_project_warnings project_name)
     message(AUTHOR_WARNING "No compiler warnings set for '${CMAKE_CXX_COMPILER_ID}' compiler.")
   endif()
 
-  target_compile_options(${project_name} INTERFACE ${PROJECT_WARNINGS})
+  target_compile_options(${project_name} PRIVATE ${PROJECT_WARNINGS})
 
 endfunction()

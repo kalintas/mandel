@@ -6,156 +6,155 @@
 #include "uniform.h"
 #include "mandel_handler.h"
 
-#include <GLFW/glfw3.h>
 
-#include <ImGui/imgui.h>
-#include <ImGui/imgui_impl_glfw.h>
-#include <ImGui/imgui_impl_opengl3.h>
 
 namespace mandel
 {   
-    static GLFWwindow* s_window = nullptr;
-
-    static gl::shader s_shader;
-    static gl::uniform s_uScreenSize = gl::s_getUniform<2>(vec4<int>{ 640, 640 }, glUniform2i);
-
-    static inline vec4<int> s_getMousePos() 
+    namespace
     {
-        double mouseX, mouseY;
-        glfwGetCursorPos(s_window, &mouseX, &mouseY);
+        GLFWwindow* window = nullptr;
 
-        return { static_cast<int>(mouseX), static_cast<int>(mouseY) };
-    }
+        gl::shader shader;
+        gl::uniform uScreenSize = gl::s_getUniform<2>(vec4<int>{ 640, 640 }, glUniform2i);
 
-    static inline void s_glfwFrameBufferSizeCallbackFunc(GLFWwindow* window, int width, int height)
-    {
-        const vec4<int> newScreenSize{ width, height };
-
-        UpdateScreenSize(s_uScreenSize.vec(), newScreenSize);
-
-        s_uScreenSize.setVec(newScreenSize);
-
-        GLCALL(glViewport(0, 0, width, height));
-    }
-
-    static bool s_mouseButtonPressed = false;
-    static vec4<int> s_mousePos;
-
-    static void s_glfwCursorPosCallbackFunc(GLFWwindow* window, double mouseX, double mouseY)
-    {   
-        if(s_mouseButtonPressed)
-        {   
-            const vec4<int> currMousePos(mouseX, mouseY);
-            // get elapsed mouse movement
-            const vec4<float> elapsedMov = currMousePos - s_mousePos;
-
-            // moving the start point according to elapsed mouse movement
-            MoveMandel(elapsedMov);
-
-            // update the old s_mousePos buffer
-            s_mousePos = vec4<int>(mouseX, mouseY);
-        }
-    }
-
-    static void s_glfwMouseButtonCallbackFunc(GLFWwindow* window, int button, int action, int mods)
-    {
-        if(ImGui::GetIO().WantCaptureMouse) return;
-
-        if(button == GLFW_MOUSE_BUTTON_LEFT)
+        vec4<int> getMousePos() 
         {
-            switch(action)
+            double mouseX, mouseY;
+            glfwGetCursorPos(window, &mouseX, &mouseY);
+
+            return { static_cast<int>(mouseX), static_cast<int>(mouseY) };
+        }
+
+        void glfwFrameBufferSizeCallbackFunc(GLFWwindow* window, int width, int height)
+        {
+            const vec4<int> newScreenSize{ width, height };
+
+            UpdateScreenSize(uScreenSize.vec(), newScreenSize);
+
+            uScreenSize.setVec(newScreenSize);
+
+            GLCALL(glViewport(0, 0, width, height));
+        }
+
+        bool mouseButtonPressed = false;
+        vec4<int> mousePos;
+
+        void glfwCursorPosCallbackFunc(GLFWwindow* window, double mouseX, double mouseY)
+        {   
+            if(mouseButtonPressed)
+            {   
+                const vec4<int> currMousePos(mouseX, mouseY);
+                // get elapsed mouse movement
+                const vec4<float> elapsedMov = currMousePos - mousePos;
+
+                // moving the start point according to elapsed mouse movement
+                MoveMandel(elapsedMov);
+
+                // update the old mousePos buffer
+                mousePos = vec4<int>(mouseX, mouseY);
+            }
+        }
+
+        void glfwMouseButtonCallbackFunc(GLFWwindow* window, int button, int action, int mods)
+        {
+            if(ImGui::GetIO().WantCaptureMouse) return;
+
+            if(button == GLFW_MOUSE_BUTTON_LEFT)
             {
-            case GLFW_PRESS:
-                s_mouseButtonPressed = true;
-                s_mousePos = s_getMousePos();
+                switch(action)
+                {
+                case GLFW_PRESS:
+                    mouseButtonPressed = true;
+                    mousePos = getMousePos();
+                break;
+                case GLFW_RELEASE:
+                    mouseButtonPressed = false;
+                break;
+                default:
+                break;
+                }
+                
+            }
+        }
+
+        void glfwKeyCallbackFunc(GLFWwindow* window, int key, int scancode, int action, int mods)
+        {   
+            switch(key)
+            {
+            case GLFW_KEY_ESCAPE:
+                glfwSetWindowShouldClose(window, true);
             break;
-            case GLFW_RELEASE:
-                s_mouseButtonPressed = false;
+            case GLFW_KEY_UP:
+                ZoomMandel(0.99f, getMousePos(), uScreenSize.vec());
+            break;
+            case GLFW_KEY_DOWN:
+                ZoomMandel(1.01f, getMousePos(), uScreenSize.vec());
             break;
             default:
             break;
             }
-            
-        }
-    }
 
-    static void s_glfwKeyCallbackFunc(GLFWwindow* window, int key, int scancode, int action, int mods)
-    {   
-        switch(key)
+        }
+
+        void DrawImGui()
         {
-        case GLFW_KEY_ESCAPE:
-            glfwSetWindowShouldClose(window, true);
-        break;
-        case GLFW_KEY_UP:
-            ZoomMandel(0.99f, s_getMousePos(), s_uScreenSize.vec());
-        break;
-        case GLFW_KEY_DOWN:
-            ZoomMandel(1.01f, s_getMousePos(), s_uScreenSize.vec());
-        break;
-        default:
-        break;
-        }
+            static bool fpsLock = true;
 
+            ImGui::Begin("Mandel");
+
+            DrawUniforms_ImGui(uScreenSize.vec());
+
+            if(ImGui::Checkbox("FPS Lock", &fpsLock)) glfwSwapInterval(static_cast<int>(fpsLock));
+            
+            ImGui::Text("Frame render time: %.3f ms (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
     }
 
     bool Init() 
     { 
         ASSERT(glfwInit() == GLFW_TRUE, "cannot init glfw");
 
-        s_window = glfwCreateWindow(s_uScreenSize.vec().x, s_uScreenSize.vec().y, "Mandel", nullptr, nullptr);
+        window = glfwCreateWindow(uScreenSize.vec().x, uScreenSize.vec().y, "Mandel", nullptr, nullptr);
 
-        ASSERT(s_window, "cannot create a window");
+        ASSERT(window, "cannot create a window");
             
-        glfwMakeContextCurrent(s_window);
+        glfwMakeContextCurrent(window);
 
         //open vsync
         glfwSwapInterval(1);
 
         // init ImGui
         ImGui::CreateContext();
-        ImGui_ImplGlfw_InitForOpenGL(s_window, true);
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 330"); // glsl version
         
         ImGui::StyleColorsDark();
 
         // call back functions for getting events
-        glfwSetFramebufferSizeCallback(s_window, s_glfwFrameBufferSizeCallbackFunc);
-        glfwSetMouseButtonCallback    (s_window, s_glfwMouseButtonCallbackFunc    );
-        glfwSetCursorPosCallback      (s_window, s_glfwCursorPosCallbackFunc      );
-        glfwSetKeyCallback            (s_window, s_glfwKeyCallbackFunc            );
+        glfwSetFramebufferSizeCallback(window, glfwFrameBufferSizeCallbackFunc);
+        glfwSetMouseButtonCallback    (window, glfwMouseButtonCallbackFunc    );
+        glfwSetCursorPosCallback      (window, glfwCursorPosCallbackFunc      );
+        glfwSetKeyCallback            (window, glfwKeyCallbackFunc            );
 
         ASSERT(glewInit() == GLEW_OK, "cannot init glew");
 
-        ASSERT(s_shader.m_createShaders(
+        ASSERT(shader.m_createShaders(
             "res/vertex.glsl" , 
             "res/fragment.glsl"
         ), "cannot create shaders");
 
-        s_shader.m_bind();
+        shader.m_bind();
 
-        CreateMandelUniforms(s_shader);
+        CreateMandelUniforms(shader);
 
-        ResetMandel(s_uScreenSize.vec());
+        ResetMandel(uScreenSize.vec());
         
-        s_uScreenSize.m_create(s_shader, "u_vScreenSize");
+        uScreenSize.m_create(shader, "u_vScreenSize");
 
-        s_uScreenSize.m_update();
+        uScreenSize.m_update();
 
         return true;
-    }
-
-    static void s_DrawImGui()
-    {
-        static bool s_fpsLock = true;
-
-        ImGui::Begin("Mandel");
-
-        DrawUniforms_ImGui(s_uScreenSize.vec());
-
-        if(ImGui::Checkbox("FPS Lock", &s_fpsLock)) glfwSwapInterval(static_cast<int>(s_fpsLock));
-        
-        ImGui::Text("Frame render time: %.3f ms (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::End();
     }
 
     void Run()
@@ -192,9 +191,9 @@ namespace mandel
 
         vbo.m_setAndEnableVertex(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
-        s_shader.m_bind();
+        shader.m_bind();
 
-        while(!glfwWindowShouldClose(s_window))
+        while(!glfwWindowShouldClose(window))
         {
             glfwPollEvents();            
 
@@ -211,15 +210,15 @@ namespace mandel
             //rendering
             GLCALL(glDrawElements(GL_TRIANGLES, 3 * 2, GL_UNSIGNED_INT, nullptr));
             
-            s_DrawImGui();
+            DrawImGui();
 
             //render present
             ImGui::Render();
 
-            glViewport(0, 0, s_uScreenSize.vec().x, s_uScreenSize.vec().x);
+            glViewport(0, 0, uScreenSize.vec().x, uScreenSize.vec().x);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-            glfwSwapBuffers(s_window);
+            glfwSwapBuffers(window);
         }
         }
         // extra brackets for cleanup functions
@@ -228,7 +227,7 @@ namespace mandel
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 
-        glfwDestroyWindow(s_window);
+        glfwDestroyWindow(window);
         glfwTerminate();
     }
 }
