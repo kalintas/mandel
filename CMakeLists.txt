@@ -5,35 +5,22 @@ project(MANDEL)
 
 include(cmake/CompilerWarnings.cmake)
 
-find_package(OpenGL REQUIRED)
-
-set(LIBRARY_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../libs")
-
-set(GLEW_SRC_FILES "${LIBRARY_SOURCE_DIR}/glew/glew.c")
-
-set(
-    IMGUI_SRC_FILES
-    "${LIBRARY_SOURCE_DIR}/ImGui/imgui.cpp"
-    "${LIBRARY_SOURCE_DIR}/ImGui/imgui_demo.cpp"
-    "${LIBRARY_SOURCE_DIR}/ImGui/imgui_draw.cpp"
-    "${LIBRARY_SOURCE_DIR}/ImGui/imgui_impl_glfw.cpp"
-    "${LIBRARY_SOURCE_DIR}/ImGui/imgui_impl_opengl3.cpp"
-    "${LIBRARY_SOURCE_DIR}/ImGui/imgui_widgets.cpp"
-)
-
 set(MANDEL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(MANDEL_SRC_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/src    ")
+set(MANDEL_SRC_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(
     HEADER_FILES 
-    "${MANDEL_INCLUDE_DIR}/utility.h" 
-    "${MANDEL_INCLUDE_DIR}/buffer_object.h" 
-    "${MANDEL_INCLUDE_DIR}/mandel.h" 
-    "${MANDEL_INCLUDE_DIR}/shader.h" 
-    "${MANDEL_INCLUDE_DIR}/uniform.h" 
-    "${MANDEL_INCLUDE_DIR}/vertex_array_object.h"
-    "${MANDEL_INCLUDE_DIR}/mandel_handler.h"
-    "${MANDEL_INCLUDE_DIR}/pch.h"
+    "${MANDEL_INCLUDE_DIR}/utility.hpp" 
+    "${MANDEL_INCLUDE_DIR}/buffer_object.hpp" 
+    "${MANDEL_INCLUDE_DIR}/mandel.hpp" 
+    "${MANDEL_INCLUDE_DIR}/shader.hpp" 
+    "${MANDEL_INCLUDE_DIR}/uniform.hpp" 
+    "${MANDEL_INCLUDE_DIR}/vertex_array_object.hpp"
+    "${MANDEL_INCLUDE_DIR}/mandel_handler.hpp"
+    "${MANDEL_INCLUDE_DIR}/pch.hpp"
+
+    "${CMAKE_CURRENT_SOURCE_DIR}/imgui_backend/imgui_impl_glfw.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/imgui_backend/imgui_impl_opengl3.h"
 )
 
 set(
@@ -45,6 +32,9 @@ set(
     "${MANDEL_SRC_DIR}/utility.cpp" 
     "${MANDEL_SRC_DIR}/vertex_array_object.cpp"
     "${MANDEL_SRC_DIR}/mandel_handler.cpp"
+
+    "${CMAKE_CURRENT_SOURCE_DIR}/imgui_backend/imgui_impl_glfw.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/imgui_backend/imgui_impl_opengl3.cpp"
 )
 
 add_executable(mandel ${SRC_FILES} ${HEADER_FILES} ${GLEW_SRC_FILES} ${IMGUI_SRC_FILES})
@@ -55,18 +45,21 @@ target_compile_definitions(mandel PRIVATE _DEBUG=1)
 target_compile_definitions(mandel PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW=1) # setup imgui with glew
 target_compile_definitions(mandel PRIVATE GLEW_STATIC=1)                   # use static
 
-target_link_libraries(
-    mandel 
-    ${OPENGL_LIBRARIES}
-    "${LIBRARY_SOURCE_DIR}/glfw/libglfw3.a"
-)
+find_package(OpenGL REQUIRED)
+
+find_package(GLEW REQUIRED)
+target_link_libraries(mandel PRIVATE GLEW::GLEW)
+
+find_package(imgui CONFIG REQUIRED)
+target_link_libraries(mandel PRIVATE imgui::imgui)
+
+find_package(glfw3 CONFIG REQUIRED)
+target_link_libraries(mandel PRIVATE glfw)
 
 
-target_include_directories(
-    mandel PUBLIC
-    ${MANDEL_INCLUDE_DIR}
-    ${OPENGL_INCLUDE_DIR}
-    ${LIBRARY_SOURCE_DIR}
+target_include_directories(mandel PRIVATE 
+    ${MANDEL_INCLUDE_DIR} 
+    "${CMAKE_CURRENT_SOURCE_DIR}/imgui_backend"
 )
 
 set_target_properties(
